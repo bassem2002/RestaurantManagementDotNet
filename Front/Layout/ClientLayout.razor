@@ -1,0 +1,106 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
+@inject Front.Services.AuthService Auth
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+<!-- Navbar Client -->
+<nav class="navbar client-navbar px-4 py-3">
+    <a class="navbar-brand fw-bold fs-4" href="/client/dashboard">
+        🍽️ ProjetResto
+    </a>
+
+    <div class="d-flex gap-4 ms-auto align-items-center">
+        <a href="/client/categories">Catégories</a>
+        <a href="/client/cart">🛒 Panier</a>
+
+        <!-- Bouton Logout -->
+        <button class="btn btn-outline-light btn-sm" @onclick="Logout">
+            <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+    </div>
+</nav>
+
+<!-- Contenu principal -->
+<div class="container mt-5">
+    @Body
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        await Auth.LogoutAsync();          // Supprime le token et met à jour l'état
+        Nav.NavigateTo("/login", true);    // Redirection vers la page login
+    }
+}
+<style>
+    .client-navbar {
+        background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+        color: white !important;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+        .navbar-brand:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+    .client-navbar a {
+        color: rgba(255, 255, 255, 0.9) !important;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+        .client-navbar a:hover {
+            color: white !important;
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+    .btn-outline-light {
+        border-color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.9);
+        transition: all 0.3s ease;
+    }
+
+        .btn-outline-light:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+    .container {
+        padding: 2rem 0;
+    }
+
+    .fs-4 {
+        font-size: 1.5rem !important;
+    }
+
+    .gap-4 {
+        gap: 1.5rem !important;
+    }
+
+    .mt-5 {
+        margin-top: 3rem !important;
+    }
+
+    .py-3 {
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+    }
+
+    .px-4 {
+        padding-left: 1.5rem !important;
+        padding-right: 1.5rem !important;
+    }
+</style>

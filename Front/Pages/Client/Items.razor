@@ -1,0 +1,87 @@
+﻿@page "/client/items/{CategoryId:int}"
+@attribute [Authorize(Roles = "Client")]
+@layout ClientLayout
+@inject Front.Services.ItemServices itemService
+@inject Front.Services.CartService Cart
+
+<h2 class="fw-bold mb-4">Nos Articles</h2>
+
+<div class="row">
+    @foreach (var item in items)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card card-modern p-3">
+                <h5 class="fw-bold">@item.Name</h5>
+                <p class="price">@item.Price DT</p>
+
+                <button class="btn btn-primary-modern w-100"
+                        @onclick="() => Cart.Add(item)">
+                    Ajouter au panier
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .card-modern {
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        border: none;
+        background: white;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+        .card-modern:hover {
+            transform: translateY(-5px);
+        }
+
+    .price {
+        color: #4361ee;
+        font-weight: 600;
+        font-size: 1.3rem;
+        margin: 1rem 0;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        border: none;
+        color: white;
+        border-radius: 12px;
+        padding: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-primary-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+        }
+
+    h2 {
+        color: #212529;
+        font-size: 1.75rem;
+    }
+
+    h5 {
+        color: #212529;
+        font-size: 1.25rem;
+        min-height: 3rem;
+    }
+
+    .row {
+        margin-top: 1.5rem;
+    }
+</style>
+
+@code {
+    [Parameter] public int CategoryId { get; set; }
+    List<Item> items = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await itemService.GetItemsAsync();
+        items = items.Where(i => i.CategoryId == CategoryId).ToList();
+    }
+}

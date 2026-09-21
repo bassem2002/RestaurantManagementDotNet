@@ -1,0 +1,59 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.slnLaunch.user
+
+# Build output
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+
+# .NET publish output
+publish/
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+secrets.json
+
+# Application settings containing local/private overrides
+appsettings.Development.json
+appsettings.Local.json
+
+# Database files / backups
+*.db
+*.sqlite
+*.sqlite3
+*.bak
+*.mdf
+*.ldf
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Certificates / private keys
+*.pfx
+*.p12
+*.pem
+*.key

@@ -1,0 +1,356 @@
+﻿@page "/client/dashboard"
+@attribute [Authorize(Roles = "Client")]
+@layout ClientLayout
+@inject HttpClient Http
+
+<div class="client-dashboard">
+    <!-- En-tête du dashboard -->
+    <div class="dashboard-header mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="fw-bold mb-2">
+                    <span class="greeting-text">@GetGreeting()</span> <span class="wave-emoji">👋</span>
+                </h1>
+                <p class="text-muted fs-5 mb-0">
+                    Découvrez nos meilleurs plats et offres exclusives
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="date-display bg-light rounded-pill px-4 py-2 d-inline-block">
+                    <i class="bi bi-calendar-check me-2 text-primary"></i>
+                    <span class="fw-semibold">@currentDate</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <div class="row mb-5">
+        <div class="col-md-3 col-6 mb-4">
+            <div class="stats-card bg-primary-gradient text-white">
+                <div class="stats-icon">
+                    <i class="bi bi-cart3"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number">12</div>
+                    <div class="stats-label">Commandes ce mois</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+            <div class="stats-card bg-success-gradient text-white">
+                <div class="stats-icon">
+                    <i class="bi bi-star"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number">8.7</div>
+                    <div class="stats-label">Note moyenne</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+            <div class="stats-card bg-warning-gradient text-white">
+                <div class="stats-icon">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number">3</div>
+                    <div class="stats-label">En préparation</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6 mb-4">
+            <div class="stats-card bg-info-gradient text-white">
+                <div class="stats-icon">
+                    <i class="bi bi-ticket-perforated"></i>
+                </div>
+                <div class="stats-content">
+                    <div class="stats-number">2</div>
+                    <div class="stats-label">Promos actives</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section recommandations -->
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0 py-4">
+                    <h3 class="fw-bold mb-0">
+                        <i class="bi bi-fire text-danger me-2"></i>
+                        Nos plats populaires
+                    </h3>
+                </div>
+
+                <div class="card-body">
+                    <div class="row g-4">
+
+                        @if (items == null)
+                        {
+                            <p>Loading...</p>
+                        }
+                        else
+                        {
+                            @foreach (var item in items)
+                            {
+                                <div class="col-md-4">
+                                    <div class="dish-card">
+                                        <div class="dish-image bg-primary bg-opacity-10 rounded-3 mb-3 d-flex align-items-center justify-content-center"
+                                             style="height: 120px;">
+                                            @if (!string.IsNullOrWhiteSpace(@item.PhotoUrl))
+                                            {
+                                                <img src="@($"{Http.BaseAddress}{@item.PhotoUrl.TrimStart('/')}")"
+                                                   style="height:120px ; width:80px; border-radius:3px;"  />
+
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">—</span>
+                                            }
+                                            <i class="bi bi-egg-fried text-primary fs-1"></i>
+                                        </div>
+
+                                        <h5 class="fw-semibold mb-1">@item.Name</h5>
+                                       
+
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-primary">
+                                                @item.Price TND
+                                            </span>
+                                            <span class="badge bg-success">⭐ Populaire</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 py-4">
+                    <h3 class="fw-bold mb-0">
+                        <i class="bi bi-lightning-charge text-warning me-2"></i>
+                        Offres du jour
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="offer-card bg-primary bg-opacity-5 rounded-3 p-3 mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="offer-icon bg-primary text-white rounded-circle p-2 me-3">
+                                <i class="bi bi-percent"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Menu Duo -20%</h6>
+                                <p class="small text-muted mb-0">Valable jusqu'à 19h</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="offer-card bg-success bg-opacity-5 rounded-3 p-3">
+                        <div class="d-flex align-items-center">
+                            <div class="offer-icon bg-success text-white rounded-circle p-2 me-3">
+                                <i class="bi bi-gift"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Dessert offert</h6>
+                                <p class="small text-muted mb-0">À partir de 25€ d'achat</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouton d'action principal -->
+    <div class="text-center mt-5">
+        <a class="btn btn-primary-modern btn-lg px-5 py-3 fw-bold"
+           href="/client/categories">
+            <i class="bi bi-menu-button-wide me-2"></i>
+            Explorer toutes les catégories
+        </a>
+    </div>
+</div>
+
+<style>
+    .client-dashboard {
+        padding: 2rem 0;
+    }
+
+    .greeting-text {
+        background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .wave-emoji {
+        animation: wave-animation 2s infinite;
+        display: inline-block;
+    }
+
+    .date-display {
+        border: 2px solid rgba(67, 97, 238, 0.1);
+    }
+
+    .stats-card {
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .bg-primary-gradient {
+        background: linear-gradient(135deg, #4361ee, #3a0ca3);
+    }
+
+    .bg-success-gradient {
+        background: linear-gradient(135deg, #06d6a0, #05c593);
+    }
+
+    .bg-warning-gradient {
+        background: linear-gradient(135deg, #ff9e00, #ffc107);
+    }
+
+    .bg-info-gradient {
+        background: linear-gradient(135deg, #4cc9f0, #3ab5d9);
+    }
+
+    .stats-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        opacity: 0.9;
+    }
+
+    .stats-number {
+        font-size: 2.2rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stats-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+    }
+
+    .dish-card {
+        padding: 1rem;
+        border-radius: 12px;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+        .dish-card:hover {
+            border-color: rgba(67, 97, 238, 0.2);
+            background-color: rgba(67, 97, 238, 0.02);
+            transform: translateY(-3px);
+        }
+
+    .dish-image {
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+    }
+
+    .offer-card {
+        transition: transform 0.3s ease;
+    }
+
+        .offer-card:hover {
+            transform: translateX(5px);
+        }
+
+    .offer-icon {
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        border: none;
+        color: white;
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-primary-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(67, 97, 238, 0.3);
+            color: white;
+        }
+
+        .btn-primary-modern.btn-lg {
+            padding: 1rem 3rem;
+            font-size: 1.1rem;
+            border-radius: 15px;
+        }
+
+    .badge {
+        padding: 0.35em 0.65em;
+        border-radius: 8px;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .rounded-3 {
+        border-radius: 12px !important;
+    }
+
+    .bg-opacity-5 {
+        background-color: rgba(var(--bs-primary-rgb), 0.05) !important;
+    }
+
+    .bg-opacity-10 {
+        background-color: rgba(var(--bs-primary-rgb), 0.1) !important;
+    }
+</style>
+
+@code {
+    private string currentDate = "";
+
+    protected override void OnInitialized()
+    {
+        currentDate = DateTime.Now.ToString("dddd dd MMMM yyyy",
+            new System.Globalization.CultureInfo("fr-FR"));
+    }
+
+    private string GetGreeting()
+    {
+        var hour = DateTime.Now.Hour;
+        if (hour >= 5 && hour < 12) return "Bonjour";
+        if (hour >= 12 && hour < 18) return "Bon après-midi";
+        return "Bonsoir";
+    }
+    private List<ItemDto>? items;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var allItems = await Http.GetFromJsonAsync<List<ItemDto>>("api/item");
+
+        // Take ONLY 3 items
+        items = allItems?
+            .OrderByDescending(i => i.ItemId) // or popularity
+            .Take(3)
+            .ToList();
+    }
+}

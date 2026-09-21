@@ -1,0 +1,82 @@
+﻿@page "/admin/clients/cart/{ClientId}"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@layout AdminLayout
+
+
+<h3 class="text-xl font-semibold mb-4">Client Cart</h3>
+
+@if (isLoading)
+{
+    <p>Loading cart...</p>
+}
+else if (cartItems is null || cartItems.Count == 0)
+{
+    <p class="text-gray-500">This cart is empty.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in cartItems)
+            {
+                <tr>
+                    <td>@item.ItemName</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Price</td>
+                    <td>@(item.Price* item.Quantity)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button class="btn btn-secondary mt-3" @onclick="GoBack">Back</button>
+}
+
+@code {
+    [Parameter]
+    public string ClientId { get; set; } = string.Empty;
+
+    private List<CartItemDto>? cartItems;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            cartItems = await Http.GetFromJsonAsync<List<CartItemDto>>(
+                $"/api/clients/{ClientId}/cart");
+        }
+        catch
+        {
+            cartItems = new();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin/clients");
+    }
+
+    public class CartItemDto
+    {
+        public int CartItemId { get; set; }
+        public string? ItemName { get; set; }
+        public int Quantity { get; set; }
+        public decimal Price { get; set; }
+    }
+}

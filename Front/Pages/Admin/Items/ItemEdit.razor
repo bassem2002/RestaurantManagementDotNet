@@ -1,0 +1,238 @@
+﻿@page "/admin/items/edit/{Id:int}"
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@layout AdminLayout
+
+
+<PageTitle>Éditer Item</PageTitle>
+
+<div class="container-fluid">
+
+    <!-- PAGE HEADER -->
+    <div class="mb-4">
+        <h3 class="fw-semibold">Éditer l’item</h3>
+    </div>
+
+    <!-- ERROR -->
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            @errorMessage
+        </div>
+    }
+
+    <!-- CONTENT -->
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+
+                    @if (isLoading)
+                    {
+                        <div class="d-flex justify-content-center p-5">
+                            <div class="spinner-border text-dark"></div>
+                        </div>
+                    }
+                    else
+                    {
+                        <EditForm Model="item" OnValidSubmit="Save">
+                            <DataAnnotationsValidator />
+
+                            <!-- NAME -->
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Nom</label>
+                                <InputText class="form-control"
+                                           placeholder="Nom de l’item"
+                                           @bind-Value="item.Name" />
+                                <ValidationMessage For="@(() => item.Name)" />
+                            </div>
+
+                            <!-- PRICE -->
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Prix</label>
+                                <InputNumber class="form-control"
+                                             placeholder="0.00"
+                                             @bind-Value="item.Price" />
+                                <ValidationMessage For="@(() => item.Price)" />
+                            </div>
+
+                            <!-- CATEGORY -->
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Catégorie</label>
+                                <InputSelect class="form-select"
+                                             @bind-Value="item.CategoryId">
+                                    <option value="">-- Sélectionner une catégorie --</option>
+                                    @foreach (var cat in categories)
+                                    {
+                                        <option value="@cat.CategoryId">@cat.Name</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => item.CategoryId)" />
+                            </div>
+
+                            <!-- CURRENT PHOTO -->
+                            @if (!string.IsNullOrWhiteSpace(item.PhotoUrl))
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-medium">Photo actuelle</label><br />
+                                    <img src="@($"{Http.BaseAddress}{item.PhotoUrl.TrimStart('/')}")"
+                                         class="rounded shadow-sm"
+                                         style="width:120px;height:120px;object-fit:cover;" />
+                                </div>
+                            }
+
+                            <!-- NEW PHOTO -->
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">Nouvelle photo (optionnel)</label>
+                                <InputFile OnChange="OnPhotoSelected"
+                                           class="form-control" />
+
+                                @if (!string.IsNullOrEmpty(photoName))
+                                {
+                                    <div class="form-text">
+                                        Nouveau fichier : @photoName
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- ACTIONS -->
+                            <div class="d-flex justify-content-end gap-2 mt-4">
+                                <button class="btn btn-success" type="submit">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Enregistrer
+                                </button>
+
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        @onclick="Cancel">
+                                    Annuler
+                                </button>
+                            </div>
+                        </EditForm>
+                    }
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private ItemDto item = new();
+    private List<Category> categories = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+
+    private IBrowserFile? photoFile;
+    private string? photoName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadItem();
+
+        try
+        {
+            categories = await Http.GetFromJsonAsync<List<Category>>("api/category")
+                         ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    async Task LoadItem()
+    {
+        try
+        {
+            item = await Http.GetFromJsonAsync<ItemDto>($"api/item/{Id}")
+                   ?? throw new Exception("Item introuvable");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    void OnPhotoSelected(InputFileChangeEventArgs e)
+    {
+        photoFile = e.File;
+        photoName = e.File.Name;
+    }
+
+    async Task Save()
+    {
+        try
+        {
+            var content = new MultipartFormDataContent();
+
+            content.Add(new StringContent(item.Name), "Name");
+            content.Add(new StringContent(item.Price!.Value.ToString()), "Price");
+            content.Add(new StringContent(item.CategoryId!.Value.ToString()), "CategoryId");
+
+            if (photoFile != null)
+            {
+                var stream = photoFile.OpenReadStream(5 * 1024 * 1024);
+
+                content.Add(
+                    new StreamContent(stream),
+                    "Photo",
+                    photoFile.Name
+                );
+            }
+
+            var response = await Http.PutAsync($"api/item/{Id}", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Navigation.NavigateTo("/admin/items");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    void Cancel()
+    {
+        Navigation.NavigateTo("/admin/items");
+    }
+
+    // DTOs
+    public class ItemDto
+    {
+        [Required(ErrorMessage = "Le nom est requis")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Le prix est requis")]
+        public decimal? Price { get; set; }
+
+        [Required(ErrorMessage = "La catégorie est requise")]
+        public int? CategoryId { get; set; }
+
+        public string? PhotoUrl { get; set; }
+    }
+
+    public class Category
+    {
+        public int CategoryId { get; set; }
+        public string Name { get; set; }
+    }
+}

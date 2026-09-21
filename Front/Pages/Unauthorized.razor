@@ -1,0 +1,198 @@
+﻿@page "/unauthorized"
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthStateProvider
+<div class="unauthorized-page-fullscreen">
+    <!-- Effets de fond subtils -->
+    <div class="background-effects">
+        <div class="grid-pattern"></div>
+        <div class="gradient-blob-1"></div>
+        <div class="gradient-blob-2"></div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="content-fullscreen">
+        <h1 class="main-title">
+            Accès <span class="title-accent">Refusé</span>
+        </h1>
+        <p class="error-description">
+            Vous ne disposez pas des autorisations nécessaires pour accéder à cette ressource.
+            Contactez votre administrateur pour obtenir les droits d'accès.
+        </p>
+
+        <!-- Actions -->
+        <div class="action-section">
+            <button class="action-btn primary-action" @onclick="GoToHome">
+                <i class="bi bi-house-door-fill"></i>
+                <span>Retour à l'accueil</span>
+            </button>
+
+            <button class="action-btn outline-action" @onclick="GoToLogin">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span>Se connecter</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Variables */
+    :root {
+        --primary: #4361ee;
+        --primary-dark: #3a0ca3;
+        --danger: #ef476f;
+        --danger-light: #ff7096;
+        --dark: #1a1a2e;
+        --gray: #ccc;
+        --radius-lg: 12px;
+        --transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Page plein écran */
+    .unauthorized-page-fullscreen {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: white;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        padding: 2rem;
+    }
+
+    /* Effets de fond */
+    .background-effects {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .grid-pattern {
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+    }
+
+    .gradient-blob-1, .gradient-blob-2 {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(40px);
+    }
+
+    .gradient-blob-1 {
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(239,71,111,0.1) 0%, transparent 70%);
+        top: -200px;
+        right: -200px;
+    }
+
+    .gradient-blob-2 {
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(67,97,238,0.08) 0%, transparent 70%);
+        bottom: -150px;
+        left: -150px;
+    }
+
+    /* Contenu central */
+    .content-fullscreen {
+        position: relative;
+        z-index: 10;
+        max-width: 800px;
+        width: 100%;
+    }
+
+    /* Titre */
+    .main-title {
+        font-size: 4rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .title-accent {
+        color: var(--danger);
+    }
+
+    .error-description {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        color: #ccc;
+    }
+
+    /* Actions */
+    .action-section {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        border-radius: var(--radius-lg);
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        border: none;
+    }
+
+    .primary-action {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+    }
+
+        .primary-action:hover {
+            transform: translateY(-3px);
+        }
+
+    .outline-action {
+        background: transparent;
+        border: 2px solid var(--gray);
+        color: white;
+    }
+
+        .outline-action:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-3px);
+        }
+
+</style>
+
+@code {
+    private async Task GoToHome()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            if (user.IsInRole("Admin"))
+            {
+                Navigation.NavigateTo("/admin");
+            }
+            else
+            {
+                Navigation.NavigateTo("/client/dashboard");
+            }
+        }
+        else
+        {
+            // Not authenticated, go to generic home or login
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    private void GoToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+}

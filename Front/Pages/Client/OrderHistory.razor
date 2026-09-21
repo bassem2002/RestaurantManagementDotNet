@@ -1,0 +1,71 @@
+@page "/client/orders"
+@attribute [Authorize(Roles = "Client")]
+@layout ClientLayout
+@inject Frontend.Services.OrderClientService orderService
+@using Front.Models
+
+<div class="container mt-4">
+    <h2 class="mb-4">?? Mes Commandes</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (orders == null || orders.Count == 0)
+    {
+        <div class="alert alert-info">
+            <p><a href="/client/categories">Commencez à commander</a></p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var order in orders.OrderByDescending(o => o.OrderDate))
+            {
+                <div class="col-md-12 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>#@order.OrderId - @order.OrderDate.ToString("dd/MM/yyyy")</h6>
+                                </div>
+                                <div class="col-md-6 text-end">
+                                    <span class="badge bg-info">@order.Status</span>
+                                </div>
+                            </div>
+                            <p>Total: @order.TotalAmount DT</p>
+                            <a href="/client/order-tracking/@order.OrderId" class="btn btn-sm btn-primary">Voir Détails</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<OrderDTO> orders;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        isLoading = true;
+        try
+        {
+            orders = await orderService.GetUserOrdersAsync();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

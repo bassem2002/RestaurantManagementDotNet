@@ -1,0 +1,41 @@
+﻿@page "/admin/clients"
+@attribute [Authorize(Roles = "Admin")]
+@inject ClientServices ClientService
+@inject NavigationManager Navigation
+@layout AdminLayout
+
+
+<h3>Clients</h3>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>View Cart</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var client in Clients)
+        {
+            <tr>
+                <td>@client.UserName</td>
+                <td>@client.Email</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => ViewCart(client.Id)">View Cart</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    public List<ApplicationUser> Clients { get; set; } = new List<ApplicationUser>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Clients = await ClientService.GetClients();
+    }
+
+    private void ViewCart(string clientId) => Navigation.NavigateTo($"/admin/clients/cart/{clientId}");
+}

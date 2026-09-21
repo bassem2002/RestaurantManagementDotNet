@@ -1,0 +1,162 @@
+@page "/admin/items"
+@attribute [Authorize(Roles = "Admin")]
+
+@using Backend.Models
+@using Front.Models
+@layout AdminLayout
+@using Front.Services
+@inject HttpClient Http
+
+@inject NavigationManager Navigation
+@inject AuthService AuthService
+@inject ItemServices ItemServices
+@inject IJSRuntime JS
+
+<PageTitle>Dashboard - Items</PageTitle>
+
+<div class="container-fluid">
+
+    <!-- PAGE HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-semibold mb-0">Items</h3>
+
+        <button class="btn btn-success" @onclick="GoToCreate">
+            <i class="bi bi-plus-circle me-1"></i>
+            Créer un item
+        </button>
+    </div>
+
+    <!-- ERROR -->
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            @errorMessage
+        </div>
+    }
+
+    <!-- CONTENT -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+
+            @if (isLoading)
+            {
+                <div class="d-flex justify-content-center p-5">
+                    <div class="spinner-border text-dark" role="status"></div>
+                </div>
+            }
+            else if (items.Count == 0)
+            {
+                <div class="alert alert-info m-4">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Aucun item trouvé
+                </div>
+            }
+            else
+            {
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Photo</th>
+                            <th>Nom</th>
+                            <th>Catégorie</th>
+                            <th>Prix</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var it in items)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-medium">@it.ItemId</td>
+
+                                <td>
+                                    @if (!string.IsNullOrWhiteSpace(it.PhotoUrl))
+                                    {
+                                        <img src="@($"{Http.BaseAddress}{it.PhotoUrl.TrimStart('/')}")"
+                                             class="product-img" />
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+
+                                <td>@it.Name</td>
+                                <td>
+                                    <span class="badge bg-secondary">@it.CategoryName</span>
+                                </td>
+
+                                <td>@it.Price</td>
+
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-primary me-2"
+                                            @onclick='() => Navigation.NavigateTo($"/admin/items/edit/{it.ItemId}")'>
+                                        <i class="bi bi-pencil me-1"></i>
+                                        Éditer
+                                    </button>
+
+                                    <button class="btn btn-sm btn-outline-danger"
+                                            @onclick="() => DeleteItem(it.ItemId)">
+                                        <i class="bi bi-trash me-1"></i>
+                                        Supprimer
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+        </div>
+    </div>
+
+</div>
+
+@code {
+    List<ItemDto> items = new();
+    bool isLoading;
+    string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+
+        // ----------------- Load Items -----------------
+        await LoadItems();
+    }
+
+    async Task LoadItems()
+    {
+        isLoading = true;
+        try
+        {
+            items = await Http.GetFromJsonAsync<List<ItemDto>>("api/item") ?? new();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    void GoToCreate()
+    {
+        Navigation.NavigateTo("/admin/items/create");
+    }
+
+    async Task DeleteItem(int id)
+    {
+        if (!await JS.InvokeAsync<bool>("confirm", "Supprimer cet item ?")) return;
+        var result = await ItemServices.DeleteItemAsync(id);
+        if (result)
+        {
+            await LoadItems();
+        }
+    }
+}

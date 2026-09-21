@@ -1,0 +1,93 @@
+﻿@page "/admin/categories"
+@attribute [Authorize(Roles = "Admin")]
+@using Backend.Models
+@layout AdminLayout
+@using Front.Services
+
+@inject NavigationManager Navigation
+@inject AuthService AuthService
+@inject CategorieServices CategorieServices
+@inject IJSRuntime JS
+
+<div class="container-fluid">
+
+    <!-- PAGE HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-semibold mb-0">Categories</h3>
+
+        <button class="btn btn-success" @onclick="CreateCategory">
+            <i class="bi bi-plus-circle me-1"></i>
+            Créer une catégorie
+        </button>
+    </div>
+
+    <!-- TABLE CARD -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Nom Catégorie</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var category in Categories)
+                    {
+                        <tr>
+                            <td class="ps-4 fw-medium">@category.Name</td>
+
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-outline-danger"
+                                        @onclick="() => DeleteCategoryAsync(category.CategoryId)">
+                                    <i class="bi bi-trash me-1"></i>
+                                    Supprimer
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+@code {
+    public List<Category> Categories { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ----------------- Check Admin Role ----------------
+
+        // ----------------- Load Categories -----------------
+        await LoadCategoriesAsync();
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        Categories = await CategorieServices.GetCategoriesAsync();
+    }
+
+    private void CreateCategory()
+    {
+        Navigation.NavigateTo("/categories/create");
+    }
+
+    private async Task DeleteCategoryAsync(int id)
+    {
+        // Confirm deletion
+        bool confirmed = await JS.InvokeAsync<bool>("confirm", "Supprimer cette catégorie ?");
+        if (!confirmed) return;
+
+        bool result = await CategorieServices.DeleteCategoryAsync(id);
+        if (result)
+        {
+            await LoadCategoriesAsync();
+        }
+    }
+}

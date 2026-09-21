@@ -1,0 +1,63 @@
+﻿@page "/admin/clients/cart/{CartId:int}"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject ClientServices ClientService
+@inject NavigationManager Navigation
+@using Backend.Models
+@layout AdminLayout
+
+
+<h3>Client Cart</h3>
+
+@if (CartItems == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!CartItems.Any())
+{
+    <p>This cart is empty.</p>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in CartItems)
+            {
+                <tr>
+                    <td>@item.Item?.Name</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Item?.Price.ToString("C")</td>
+                    <td>@(item.Item != null ? (item.Quantity * item.Item.Price).ToString("C") : "")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<button class="btn btn-secondary mt-2" @onclick="GoBack">Back</button>
+
+@code {
+    [Parameter] public int CartId { get; set; }
+    public List<CartItem> CartItems { get; set; } = new List<CartItem>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch cart items from backend
+        CartItems = await ClientService.GetCartItemsByCartId(CartId);
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin/clients");
+    }
+}
+
+

@@ -1,0 +1,115 @@
+﻿@page "/client/cart"
+@attribute [Authorize(Roles = "Client")]
+@layout ClientLayout
+@inject Front.Services.CartService cartService
+@inject NavigationManager navigationManager
+
+<h2 class="fw-bold mb-4">🛒 Panier</h2>
+
+@if (!cartService.Items.Any())
+{
+    <p class="text-muted">Votre panier est vide</p>
+}
+else
+{
+    <div class="card card-modern p-4">
+        @foreach (var item in cartService.Items)
+        {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <strong>@item.Name</strong>
+                    <div class="text-muted small">@item.Price DT</div>
+                </div>
+
+                <button class="btn btn-sm btn-outline-danger"
+                        title="Remove from cart"
+                        @onclick="() => RemoveFromCart(item)">
+                    <i class="bi bi-trash3"></i>
+                </button>
+            </div>
+        }
+
+        <hr />
+        <h4>Total : <span class="price">@cartService.Total DT</span></h4>
+
+        <button class="btn btn-primary-modern mt-3 w-100" @onclick="GoToCheckout">
+            Commander
+        </button>
+    </div>
+}
+
+<style>
+    .card-modern {
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        border: none;
+        background: white;
+    }
+
+    .price {
+        color: #4361ee;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        border: none;
+        color: white;
+        border-radius: 12px;
+        padding: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-primary-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+            color: white;
+        }
+
+    h2 {
+        color: #212529;
+        font-size: 1.75rem;
+    }
+
+    h4 {
+        color: #212529;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .text-muted {
+        color: #6c757d !important;
+    }
+
+    hr {
+        opacity: 0.2;
+        margin: 1.5rem 0;
+    }
+
+    .btn-outline-danger {
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+
+        .btn-outline-danger i {
+            font-size: 1rem;
+        }
+</style>
+
+@code {
+    private void GoToCheckout()
+    {
+        navigationManager.NavigateTo("/client/checkout");
+    }
+    private void RemoveFromCart(Item item)
+    {
+        cartService.Remove(item);
+    }
+}

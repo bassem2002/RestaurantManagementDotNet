@@ -1,0 +1,472 @@
+﻿@page "/client/categories"
+@attribute [Authorize(Roles = "Client")]
+@layout ClientLayout
+@inject Front.Services.CategorieServices categorieService
+
+<div class="categories-page">
+    <!-- En-tête de la page -->
+    <div class="page-header mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="fw-bold mb-3">
+                    <i class="bi bi-grid-3x3-gap text-primary me-2"></i>
+                    Nos Catégories
+                </h1>
+                <p class="text-muted fs-5 mb-0">
+                    Explorez notre sélection de plats par catégorie
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="categories-count bg-light rounded-pill px-4 py-2 d-inline-block">
+                    <span class="badge bg-primary rounded-pill me-2">@categories.Count</span>
+                    <span class="fw-semibold">catégories disponibles</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres (optionnel) -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="search-box">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0"
+                           placeholder="Rechercher une catégorie..."
+                           @bind="searchTerm"
+                           @bind:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">
+                    <i class="bi bi-sort-down me-2"></i>
+                    Trier par
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" @onclick='() => SortCategories("name")'>Nom (A-Z)</a></li>
+                    <li><a class="dropdown-item" href="#" @onclick='() => SortCategories("popularity")'>Popularité</a></li>
+                    <li><a class="dropdown-item" href="#" @onclick='() => SortCategories("newest")'>Plus récent</a></li>
+                </ul>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille des catégories -->
+    @if (filteredCategories.Any())
+    {
+        <div class="row">
+            @foreach (var cat in filteredCategories)
+            {
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="category-card">
+                        <!-- En-tête de la carte -->
+                        <div class="category-header @GetCategoryColor(cat.CategoryId)">
+                            <div class="category-icon">
+                                <i class="@GetCategoryIcon(cat.CategoryId)"></i>
+                            </div>
+                        </div>
+
+                        <!-- Corps de la carte -->
+                        <div class="category-body">
+                            <h3 class="category-title fw-bold mb-2">@cat.Name</h3>
+                            <p class="category-description text-muted small mb-3">
+                                @GetCategoryDescription(cat.Name)
+                            </p>
+
+                            <!-- Statistiques (optionnelles) -->
+                            <div class="category-stats d-flex justify-content-between mb-3">
+                                <div class="stat-item text-center">
+                                    <div class="stat-number text-primary fw-bold">@GetRandomCount(15, 50)</div>
+                                    <div class="stat-label text-muted small">Plats</div>
+                                </div>
+                                <div class="stat-item text-center">
+                                    <div class="stat-number text-success fw-bold">4.@GetRandomCount(5, 9)</div>
+                                    <div class="stat-label text-muted small">Note</div>
+                                </div>
+                                <div class="stat-item text-center">
+                                    <div class="stat-number text-warning fw-bold">@GetRandomCount(100, 500)+</div>
+                                    <div class="stat-label text-muted small">Ventes</div>
+                                </div>
+                            </div>
+
+                            <!-- Bouton d'action -->
+                            <a class="btn btn-explore w-100"
+                               href="/client/items/@cat.CategoryId">
+                                <i class="bi bi-arrow-right-circle me-2"></i>
+                                Explorer la catégorie
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- État vide -->
+        <div class="empty-state text-center py-5">
+            <div class="empty-icon mb-4">
+                <i class="bi bi-folder-x text-muted" style="font-size: 4rem;"></i>
+            </div>
+            <h3 class="fw-bold mb-3">Aucune catégorie trouvée</h3>
+            <p class="text-muted mb-4">Aucune catégorie ne correspond à votre recherche</p>
+            <button class="btn btn-primary-modern" @onclick="ClearSearch">
+                <i class="bi bi-arrow-clockwise me-2"></i>
+                Voir toutes les catégories
+            </button>
+        </div>
+    }
+
+    <!-- Information -->
+    <div class="info-card mt-5">
+        <div class="card border-0 bg-light">
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="fw-bold mb-2">
+                            <i class="bi bi-info-circle text-primary me-2"></i>
+                            Vous ne trouvez pas ce que vous cherchez ?
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Contactez-nous pour des demandes spéciales ou des suggestions
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        <a href="/client/contact" class="btn btn-outline-primary">
+                            <i class="bi bi-chat-dots me-2"></i>
+                            Nous contacter
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .categories-page {
+        padding: 2rem 0;
+    }
+
+    .page-header {
+        border-bottom: 2px solid #f0f0f0;
+        padding-bottom: 1.5rem;
+    }
+
+    .categories-count {
+        border: 2px solid rgba(67, 97, 238, 0.1);
+    }
+
+    .search-box .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+    }
+
+        .search-box .form-control:focus {
+            border-color: #4361ee;
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
+        }
+
+    .search-box .input-group-text {
+        background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+        border-right: none;
+        border-radius: 10px 0 0 10px;
+    }
+
+    /* Cartes de catégories */
+    .category-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(67, 97, 238, 0.15);
+        }
+
+    .category-header {
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .category-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0));
+        }
+
+    .category-icon {
+        font-size: 3rem;
+        color: white;
+        z-index: 1;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .category-body {
+        padding: 1.5rem;
+    }
+
+    .category-title {
+        color: #212529;
+        font-size: 1.25rem;
+        line-height: 1.3;
+    }
+
+    .category-description {
+        line-height: 1.5;
+        min-height: 40px;
+    }
+
+    .category-stats {
+        padding: 1rem;
+        background-color: rgba(248, 249, 250, 0.8);
+        border-radius: 10px;
+        margin: 1rem 0;
+    }
+
+    .stat-item {
+        flex: 1;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+    }
+
+    /* Boutons */
+    .btn-explore {
+        background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        border: none;
+        color: white;
+        border-radius: 10px;
+        padding: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-explore:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+            color: white;
+        }
+
+    .btn-primary-modern {
+        background: linear-gradient(90deg, #4361ee, #3a0ca3);
+        border: none;
+        color: white;
+        border-radius: 10px;
+        padding: 0.75rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+        .btn-primary-modern:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+            color: white;
+        }
+
+    /* Couleurs des catégories */
+    .bg-primary-gradient {
+        background: linear-gradient(135deg, #4361ee, #3a0ca3) !important;
+    }
+
+    .bg-success-gradient {
+        background: linear-gradient(135deg, #06d6a0, #05c593) !important;
+    }
+
+    .bg-warning-gradient {
+        background: linear-gradient(135deg, #ff9e00, #ffc107) !important;
+    }
+
+    .bg-danger-gradient {
+        background: linear-gradient(135deg, #f72585, #d9048c) !important;
+    }
+
+    .bg-info-gradient {
+        background: linear-gradient(135deg, #4cc9f0, #3ab5d9) !important;
+    }
+
+    .bg-purple-gradient {
+        background: linear-gradient(135deg, #7209b7, #560bad) !important;
+    }
+
+    .bg-teal-gradient {
+        background: linear-gradient(135deg, #2a9d8f, #21867a) !important;
+    }
+
+    .bg-orange-gradient {
+        background: linear-gradient(135deg, #f48c06, #e85d04) !important;
+    }
+
+    /* État vide */
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 16px;
+        margin: 2rem 0;
+    }
+
+    /* Card d'information */
+    .info-card .card {
+        border-radius: 16px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .category-header {
+            height: 100px;
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+        }
+
+        .category-stats {
+            padding: 0.75rem;
+        }
+
+        .stat-number {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+
+@code {
+    List<Category> categories = new();
+    List<Category> filteredCategories = new();
+    private string searchTerm = "";
+    private Random random = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await categorieService.GetCategoriesAsync();
+        filteredCategories = categories;
+    }
+
+    private string GetCategoryColor(int categoryId)
+    {
+        var colors = new[] {
+            "bg-primary-gradient",
+            "bg-success-gradient",
+            "bg-warning-gradient",
+            "bg-danger-gradient",
+            "bg-info-gradient",
+            "bg-purple-gradient",
+            "bg-teal-gradient",
+            "bg-orange-gradient"
+        };
+        return colors[categoryId % colors.Length];
+    }
+
+    private string GetCategoryIcon(int categoryId)
+    {
+        var icons = new Dictionary<string, string>
+        {
+            {"Entrée", "bi bi-egg-fried"},
+            {"Plat", "bi bi-egg-fried"},
+            {"Dessert", "bi bi-cake2"},
+            {"Boisson", "bi bi-cup-straw"},
+            {"Apéritif", "bi bi-wine-glass"},
+            {"Salade", "bi bi-flower1"},
+            {"Soupe", "bi bi-thermometer-sun"},
+            {"Pizza", "bi bi-circle"},
+            {"Burger", "bi bi-bootstrap"},
+            {"Pâtes", "bi bi-basket"},
+            {"Poisson", "bi bi-droplet"},
+            {"Viande", "bi bi-fire"},
+            {"Végétarien", "bi bi-tree"},
+            {"Menu", "bi bi-card-checklist"},
+            {"Spécialité", "bi bi-star"}
+        };
+
+        var category = categories.FirstOrDefault(c => c.CategoryId == categoryId);
+        if (category != null && icons.ContainsKey(category.Name))
+            return icons[category.Name];
+
+        // Icônes par défaut basées sur l'ID
+        var defaultIcons = new[] {
+            "bi bi-egg-fried",
+            "bi bi-cup-straw",
+            "bi bi-cake2",
+            "bi bi-fire",
+            "bi bi-droplet",
+            "bi bi-basket",
+            "bi bi-flower1",
+            "bi bi-star"
+        };
+        return defaultIcons[categoryId % defaultIcons.Length];
+    }
+
+    private string GetCategoryDescription(string categoryName)
+    {
+        var descriptions = new Dictionary<string, string>
+        {
+            {"Entrée", "Commencez votre repas avec nos délicieuses entrées"},
+            {"Plat", "Nos plats principaux préparés avec soin"},
+            {"Dessert", "Terminez en beauté avec nos desserts gourmands"},
+            {"Boisson", "Rafraîchissements et boissons diverses"},
+            {"Apéritif", "À partager avant le repas"},
+            {"Salade", "Frais et légers, parfaits pour toute occasion"},
+            {"Soupe", "Réconfortantes et savoureuses"},
+            {"Pizza", "Nos pizzas artisanales cuites au feu de bois"},
+            {"Burger", "Burgers gourmets avec des ingrédients frais"},
+            {"Pâtes", "Pâtes fraîches avec des sauces maison"},
+            {"Poisson", "Poissons frais de la journée"},
+            {"Viande", "Viandes de qualité supérieure"},
+            {"Végétarien", "Options végétariennes savoureuses"},
+            {"Menu", "Menus complets à prix avantageux"},
+            {"Spécialité", "Nos spécialités maison uniques"}
+        };
+
+        return descriptions.ContainsKey(categoryName)
+            ? descriptions[categoryName]
+            : "Découvrez notre sélection de " + categoryName.ToLower();
+    }
+
+    private int GetRandomCount(int min, int max)
+    {
+        return random.Next(min, max);
+    }
+
+    private void ClearSearch()
+    {
+        searchTerm = "";
+        filteredCategories = categories;
+    }
+
+    private void SortCategories(string sortBy)
+    {
+        filteredCategories = sortBy switch
+        {
+            "name" => filteredCategories.OrderBy(c => c.Name).ToList(),
+            "popularity" => filteredCategories.OrderByDescending(_ => random.Next()).ToList(),
+            "newest" => filteredCategories.OrderByDescending(_ => random.Next()).ToList(),
+            _ => filteredCategories
+        };
+    }
+}

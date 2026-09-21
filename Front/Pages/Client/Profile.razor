@@ -1,0 +1,195 @@
+@page "/client/profile"
+@attribute [Authorize(Roles = "Client")]
+@layout ClientLayout
+@inject NavigationManager navigationManager
+@inject Front.Services.UserProfileService profileService
+@inject Front.Services.ToastService toastService
+@inject AuthenticationStateProvider authStateProvider
+@using Front.Models
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="container mt-4">
+    <h2 class="mb-4">?? Mon Profil</h2>
+
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Chargement du profil...</span>
+            </div>
+        </div>
+    }
+    else if (userProfile == null)
+    {
+        <div class="alert alert-warning">
+            Impossible de charger votre profil. Veuillez <a href="/login">vous reconnecter</a>.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5>Informations Personnelles</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(successMessage))
+                        {
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                @successMessage
+                                <button type="button" class="btn-close" @onclick="@(() => successMessage = string.Empty)"></button>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                @errorMessage
+                                <button type="button" class="btn-close" @onclick="@(() => errorMessage = string.Empty)"></button>
+                            </div>
+                        }
+
+                        <EditForm Model="userProfile" OnValidSubmit="SaveProfile">
+                            <DataAnnotationsValidator />
+
+                            <div class="mb-3">
+                                <label class="form-label">Nom d'utilisateur</label>
+                                <input type="text" class="form-control" value="@userProfile.Username" disabled />
+                                <small class="text-muted">Le nom d'utilisateur ne peut pas être modifié</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <InputText class="form-control" @bind-Value="userProfile.Email" placeholder="exemple@email.com" />
+                                <ValidationMessage For="@(() => userProfile.Email)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Nom Complet</label>
+                                <InputText class="form-control" @bind-Value="userProfile.FullName" placeholder="Votre nom complet" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Téléphone</label>
+                                <InputText type="tel" class="form-control" @bind-Value="userProfile.Phone" placeholder="+216 50 000 000" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Adresse</label>
+                                <InputText class="form-control" @bind-Value="userProfile.Address" placeholder="Votre adresse" />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Ville</label>
+                                    <InputText class="form-control" @bind-Value="userProfile.City" placeholder="Tunis" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Code Postal</label>
+                                    <InputText class="form-control" @bind-Value="userProfile.PostalCode" placeholder="1000" />
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" disabled="@isSaving">
+                                @if (isSaving)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Enregistrement...</span>
+                                }
+                                else
+                                {
+                                    <span>?? Enregistrer</span>
+                                }
+                            </button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-secondary text-white">
+                        <h5>Actions Rapides</h5>
+                    </div>
+                    <div class="card-body">
+                        <a href="/client/orders" class="btn btn-outline-primary w-100 mb-2">?? Mes Commandes</a>
+                        <a href="/client/categories" class="btn btn-outline-primary w-100 mb-2">??? Commander</a>
+                        <button class="btn btn-outline-danger w-100" @onclick="Logout">Se Déconnecter</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private UserProfileDTO userProfile;
+    private bool isLoading = true;
+    private bool isSaving = false;
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserProfile();
+    }
+
+    private async Task LoadUserProfile()
+    {
+        isLoading = true;
+        try
+        {
+            userProfile = await profileService.GetUserProfileAsync();
+            
+            if (userProfile == null)
+            {
+                errorMessage = "Impossible de charger votre profil.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task SaveProfile()
+    {
+        isSaving = true;
+        errorMessage = string.Empty;
+        successMessage = string.Empty;
+
+        try
+        {
+            var success = await profileService.UpdateUserProfileAsync(userProfile);
+            
+            if (success)
+            {
+                successMessage = "? Profil mis à jour avec succès !";
+            }
+            else
+            {
+                errorMessage = "Erreur lors de la mise à jour du profil.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Erreur: {ex.Message}";
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task Logout()
+    {
+        navigationManager.NavigateTo("/login");
+    }
+}

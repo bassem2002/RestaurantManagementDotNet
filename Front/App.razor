@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@inject NavigationManager Navigation
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData">
+                <NotAuthorized>
+
+                    <Front.Pages.Unauthorized />
+                  
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+
+        <NotFound>
+            <p class="text-center mt-5 text-danger">
+                Page not found
+            </p>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

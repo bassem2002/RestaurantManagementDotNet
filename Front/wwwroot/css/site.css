@@ -1,0 +1,52 @@
+﻿body {
+    background: #f5f7fb;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Navbar */
+.client-navbar {
+    background: linear-gradient(90deg, #111827, #1f2937);
+    box-shadow: 0 4px 10px rgba(0,0,0,.2);
+}
+
+    .client-navbar a {
+        color: white !important;
+        font-weight: 500;
+    }
+
+        .client-navbar a:hover {
+            color: #22c55e !important;
+        }
+
+/* Cards */
+.card-modern {
+    border: none;
+    border-radius: 18px;
+    box-shadow: 0 10px 25px rgba(0,0,0,.08);
+    transition: transform .3s ease, box-shadow .3s ease;
+}
+
+    .card-modern:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 15px 35px rgba(0,0,0,.15);
+    }
+
+/* Buttons */
+.btn-primary-modern {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    border: none;
+    border-radius: 30px;
+    padding: 8px 20px;
+    color: white;
+}
+
+    .btn-primary-modern:hover {
+        opacity: .9;
+    }
+
+/* Price */
+.price {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #16a34a;
+}

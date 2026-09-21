@@ -1,0 +1,124 @@
+﻿@page "/admin/orders/details/{Id:int}"
+@attribute [Authorize(Roles = "Admin")]
+
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@layout AdminLayout
+<PageTitle>Order Details</PageTitle>
+
+<div class="container mt-4">
+
+    <button class="btn btn-secondary mb-3" @onclick="GoBack">
+        ← Back to orders
+    </button>
+
+    @if (order == null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary"></div>
+        </div>
+    }
+    else
+    {
+        <!-- ORDER HEADER -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Order #@order.OrderId</h5>
+
+                <span class="badge
+                        @(order.Status == "Pending" ? "bg-warning" :
+                                            order.Status == "Completed" ? "bg-success" :
+                                            order.Status == "Cancelled" ? "bg-danger" : "bg-secondary")">
+                @order.Status
+            </span>
+        </div>
+
+            <div class="card-body">
+                <p><strong>Customer:</strong> @order.Username</p>
+                <p><strong>Date:</strong> @order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                <p>
+                    <strong>Total Amount:</strong>
+                    <span class="fw-bold text-success">
+                        @order.TotalAmount.ToString("0.00") TND
+                    </span>
+                </p>
+            </div>
+        </div>
+
+        <!-- SHIPPING INFO -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">Shipping Information</h6>
+            </div>
+            <div class="card-body">
+                <p><strong>Address:</strong> @order.ShippingAddress</p>
+                <p><strong>City:</strong> @order.City</p>
+                <p><strong>Postal Code:</strong> @order.PostalCode</p>
+                <p><strong>Phone:</strong> @order.Phone</p>
+
+            @if (!string.IsNullOrWhiteSpace(order.Notes))
+                {
+                    <p><strong>Notes:</strong> @order.Notes</p>
+                }
+            </div>
+        </div>
+
+        <!-- ORDER ITEMS -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0">Order Items</h6>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-striped mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Item</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in order.OrderItems)
+                        {
+                            <tr>
+                                <td>@item.ItemName</td>
+                                <td class="text-center">@item.Quantity</td>
+                                <td class="text-end">@item.UnitPrice TND</td>
+                                <td class="text-end">
+                                    @(item.UnitPrice* item.Quantity) TND
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="3" class="text-end">Total</th>
+                            <th class="text-end text-success">
+                                @order.TotalAmount.ToString("0.00") TND
+                            </th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private OrderDTO? order;
+
+    protected override async Task OnInitializedAsync()
+    {
+        order = await Http.GetFromJsonAsync<OrderDTO>($"api/order/{Id}");
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin/orders");
+    }
+}
+

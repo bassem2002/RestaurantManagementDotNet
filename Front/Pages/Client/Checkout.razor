@@ -1,0 +1,209 @@
+@page "/client/checkout"
+@attribute [Authorize(Roles = "Client")]
+@layout ClientLayout
+@inject Frontend.Services.OrderClientService orderService
+@inject Front.Services.CartService cartService
+@inject NavigationManager navigationManager
+@using Front.Models
+
+<div class="container mt-4">
+    <h2 class="mb-4"> Passer la Commande</h2>
+
+    @if (cartService.Items.Count == 0)
+    {
+        <div class="alert alert-warning">
+            <p>Votre panier est vide. <a href="/client/categories" class="alert-link">Continuez vos achats</a></p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Adresse de Livraison</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                @errorMessage
+                                <button type="button" class="btn-close" @onclick="@(() => errorMessage = string.Empty)"></button>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(successMessage))
+                        {
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                @successMessage
+                                <button type="button" class="btn-close" @onclick="@(() => successMessage = string.Empty)"></button>
+                            </div>
+                        }
+
+                        <EditForm Model="checkoutRequest" OnValidSubmit="HandleCheckout">
+                            <DataAnnotationsValidator />
+
+                            <div class="row">
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label">Adresse de Livraison</label>
+                                    <InputText class="form-control" @bind-Value="checkoutRequest.ShippingAddress" placeholder="Ex: 123 Rue Principal" />
+                                    <ValidationMessage For="@(() => checkoutRequest.ShippingAddress)" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Ville</label>
+                                    <InputText class="form-control" @bind-Value="checkoutRequest.City" placeholder="Ex: Tunis" />
+                                    <ValidationMessage For="@(() => checkoutRequest.City)" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Code Postal</label>
+                                    <InputText class="form-control" @bind-Value="checkoutRequest.PostalCode" placeholder="Ex: 1000" />
+                                    <ValidationMessage For="@(() => checkoutRequest.PostalCode)" />
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Téléphone</label>
+                                <InputText type="tel" class="form-control" @bind-Value="checkoutRequest.Phone" placeholder="Ex: +216 50 000 000" />
+                                <ValidationMessage For="@(() => checkoutRequest.Phone)" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Notes Spéciales (Optionnel)</label>
+                                <InputTextArea class="form-control" @bind-Value="checkoutRequest.Notes" placeholder="Ajouter des notes pour le livreur..." rows="3"></InputTextArea>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success" disabled="@isLoading">
+                                    @if (isLoading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Traitement...</span>
+                                    }
+                                    else
+                                    {
+                                        <span> Continuer vers le Paiement</span>
+                                    }
+                                </button>
+                                <a href="/client/cart" class="btn btn-secondary"> Retour au Panier</a>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RÉSUMÉ DU PANIER -->
+            <div class="col-md-4">
+                <div class="card shadow-sm sticky-top" style="top: 20px;">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0"> Résumé de la Commande</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <h6>Articles (@cartService.Items.Count)</h6>
+                            <hr />
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                @foreach (var item in cartService.Items)
+                                {
+                                    <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                                        <div>
+                                            <small>@item.Name</small>
+                                            <br />
+                                            <small class="text-muted">x1</small>
+                                        </div>
+                                        <small class="fw-bold">@item.Price.ToString("F2") DT</small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Sous-total:</span>
+                            <span class="fw-bold">@cartService.Total.ToString("F2") DT</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Livraison:</span>
+                            <span class="text-success fw-bold">Gratuite</span>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total à Payer:</strong>
+                            <strong class="text-primary fs-5">@cartService.Total.ToString("F2") DT</strong>
+                        </div>
+
+                        <small class="text-muted">
+                            Paiement sécurisé<br />
+                             Livraison rapide<br />
+                             Support 24/7
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private CheckoutRequest checkoutRequest = new();
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool isLoading = false;
+
+    protected override void OnInitialized()
+    {
+        // Initialiser avec le total du panier
+        checkoutRequest.TotalAmount = cartService.Total;
+
+        // Si le panier est vide, rediriger après un délai
+        if (cartService.Items.Count == 0)
+        {
+            System.Console.WriteLine("Panier vide - Redirection en cours...");
+        }
+    }
+
+    private async Task HandleCheckout()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+
+        try
+        {
+            if (cartService.Items.Count == 0)
+            {
+                errorMessage = "Panier vide";
+                return;
+            }
+
+            // ?? ICI EXACTEMENT
+            checkoutRequest.Items = cartService.Items.Select(i => new CheckoutItemRequest
+                {
+                    ItemId = i.ItemId,
+                    Quantity = 1,
+                    UnitPrice = i.Price
+                }).ToList();
+
+            var order = await orderService.CreateOrderAsync(checkoutRequest);
+
+            if (order != null && order.OrderId > 0)
+            {
+                cartService.Clear();
+                navigationManager.NavigateTo($"/client/order-confirmation/{order.OrderId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

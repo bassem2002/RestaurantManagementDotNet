@@ -1,0 +1,331 @@
+@page "/client/order-tracking/{OrderId:int}"
+@attribute [Authorize(Roles = "Client")]
+@layout ClientLayout
+@inject Frontend.Services.OrderClientService orderService
+@inject NavigationManager navigationManager
+@using Front.Models
+
+<div class="container mt-4">
+    @if (isLoading)
+    {
+        <div class="text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+        </div>
+    }
+    else if (order == null)
+    {
+        <div class="alert alert-danger">
+            <p>Commande introuvable. <a href="/client/orders">Retour aux commandes</a></p>
+        </div>
+    }
+    else
+    {
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <a href="/client/orders" class="btn btn-outline-secondary btn-sm">? Retour aux commandes</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- SUIVI -->
+            <div class="col-md-8">
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Suivi de Commande #@order.OrderId</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- ÉTAPES DE SUIVI -->
+                        <div class="timeline">
+                            <div class="timeline-item @(IsOrderStatusReached("Processing") ? "completed" : "")">
+                                <div class="timeline-marker">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Commande Confirmée</h6>
+                                    <p class="text-muted small">@order.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item @(IsOrderStatusReached("Processing") ? "completed" : "")">
+                                <div class="timeline-marker">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>En Préparation</h6>
+                                    <p class="text-muted small">Nos équipes préparent votre commande</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item @(IsOrderStatusReached("Shipped") ? "completed" : "")">
+                                <div class="timeline-marker">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>En Livraison</h6>
+                                    <p class="text-muted small">Votre commande est en route</p>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item @(IsOrderStatusReached("Delivered") ? "completed" : "")">
+                                <div class="timeline-marker">
+                                    <i class="fas fa-home"></i>
+                                </div>
+                                <div class="timeline-content">
+                                    <h6>Livrée</h6>
+                                    <p class="text-muted small">Commande reçue à domicile</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DÉTAILS -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Détails de la Livraison</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Adresse:</strong>
+                                <p>@order.ShippingAddress</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Ville:</strong>
+                                <p>@order.City @order.PostalCode</p>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <strong>Téléphone:</strong>
+                                <p>@order.Phone</p>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Statut Actuel:</strong>
+                                <p>
+                                    <span class="badge @GetStatusBadgeClass(order.Status)">@GetStatusDisplay(order.Status)</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(order.Notes))
+                        {
+                            <div class="alert alert-info mb-0">
+                                <strong>Notes:</strong>
+                                <p class="mb-0">@order.Notes</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- RÉSUMÉ -->
+            <div class="col-md-4">
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">Articles</h6>
+                    </div>
+                    <div class="card-body">
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            @foreach (var item in order.OrderItems)
+                            {
+                                <div class="d-flex justify-content-between mb-2 pb-2 border-bottom">
+                                    <div>
+                                        <small class="fw-bold">@item.ItemName</small>
+                                        <br />
+                                        <small class="text-muted">x@item.Quantity</small>
+                                    </div>
+                                    <small class="fw-bold">@item.Subtotal.ToString("F2") DT</small>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-warning">
+                        <h6 class="mb-0">Résumé</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Sous-total:</span>
+                            <span>@order.OrderItems.Sum(i => i.Subtotal).ToString("F2") DT</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Livraison:</span>
+                            <span class="text-success">Gratuit</span>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between">
+                            <strong>Total:</strong>
+                            <strong class="text-primary">@order.TotalAmount.ToString("F2") DT</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-success">
+                    <small>
+                        <strong>?? Besoin d'aide?</strong><br />
+                        Contactez-nous au <strong>+216 71 123 456</strong> ou par <a href="mailto:support@projeteresto.com">email</a>
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="d-flex gap-2 justify-content-center">
+                    @if (order.Status != "Cancelled" && order.Status != "Delivered")
+                    {
+                        <button type="button" class="btn btn-outline-danger" @onclick="HandleCancelOrder" disabled="@isCancelling">
+                            @if (isCancelling)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                            }
+                            Annuler la Commande
+                        </button>
+                    }
+                    <a href="/client/categories" class="btn btn-outline-primary">Continuer les Achats</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 20px;
+    }
+
+    .timeline-item {
+        display: flex;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -28px;
+        top: 0;
+        width: 2px;
+        height: 100%;
+        background: #dee2e6;
+    }
+
+    .timeline-item.completed::before {
+        background: #28a745;
+    }
+
+    .timeline-marker {
+        width: 40px;
+        height: 40px;
+        background: #f8f9fa;
+        border: 2px solid #dee2e6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: -50px;
+        top: 0;
+    }
+
+    .timeline-item.completed .timeline-marker {
+        background: #28a745;
+        border-color: #28a745;
+        color: white;
+    }
+
+    .timeline-content {
+        flex: 1;
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int OrderId { get; set; }
+
+    private OrderDTO order;
+    private bool isLoading = true;
+    private bool isCancelling = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrder();
+    }
+
+    private async Task LoadOrder()
+    {
+        isLoading = true;
+        try
+        {
+            order = await orderService.GetOrderByIdAsync(OrderId);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Erreur: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool IsOrderStatusReached(string status)
+    {
+        var statusOrder = new[] { "Processing", "Shipped", "Delivered" };
+        var currentIndex = Array.IndexOf(statusOrder, order.Status);
+        var checkIndex = Array.IndexOf(statusOrder, status);
+        
+        return currentIndex >= checkIndex;
+    }
+
+    private string GetStatusDisplay(string status)
+    {
+        return status switch
+        {
+            "Pending" => "En Attente",
+            "Processing" => "En Traitement",
+            "Shipped" => "Expédiée",
+            "Delivered" => "Livrée",
+            "Cancelled" => "Annulée",
+            _ => status
+        };
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Pending" => "badge bg-warning",
+            "Processing" => "badge bg-info",
+            "Shipped" => "badge bg-primary",
+            "Delivered" => "badge bg-success",
+            "Cancelled" => "badge bg-danger",
+            _ => "badge bg-secondary"
+        };
+    }
+
+    private async Task HandleCancelOrder()
+    {
+        isCancelling = true;
+        try
+        {
+            var result = await orderService.CancelOrderAsync(OrderId);
+            if (result)
+            {
+                await LoadOrder();
+            }
+        }
+        finally
+        {
+            isCancelling = false;
+        }
+    }
+}

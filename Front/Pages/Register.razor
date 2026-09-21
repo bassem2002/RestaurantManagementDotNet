@@ -1,0 +1,456 @@
+﻿@page "/register"
+@inject Front.Services.AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Inscription - RestoApp</PageTitle>
+
+<div class="container-fluid min-vh-100 p-0 d-flex flex-column">
+    <!-- En-tête fixe -->
+    <div class="bg-primary text-white py-4 px-5">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-cup-hot-fill fs-2 me-3"></i>
+                <div>
+                    <h1 class="h3 fw-bold mb-0">RestoApp</h1>
+                    <p class="mb-0 opacity-90 small">Gestion de restaurant moderne</p>
+                </div>
+            </div>
+            <a href="/login" class="btn btn-outline-light">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                Se connecter
+            </a>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="flex-grow-1 d-flex align-items-center bg-light">
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-xl-10">
+                    <div class="card border-0 shadow-lg rounded-4">
+                        <div class="card-body p-5">
+                            <div class="row">
+                                <!-- Colonne gauche - Formulaire -->
+                                <div class="col-lg-7">
+                                    <h2 class="fw-bold mb-4 text-primary">
+                                        <i class="bi bi-person-plus me-2"></i>
+                                        Créer un nouveau compte
+                                    </h2>
+
+                                    <EditForm Model="@model" OnValidSubmit="RegisterAsync">
+                                        <DataAnnotationsValidator />
+                                        <ValidationSummary class="alert alert-danger rounded-3 mb-4" />
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold mb-2">Nom complet</label>
+                                                    <InputText class="form-control"
+                                                               @bind-Value="model.FullName"
+                                                               placeholder="John Doe" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold mb-2">Nom d'utilisateur</label>
+                                                    <InputText class="form-control"
+                                                               @bind-Value="model.Username"
+                                                               placeholder="johndoe" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="form-label fw-semibold mb-2">Adresse email</label>
+                                            <InputText type="email"
+                                                       class="form-control"
+                                                       @bind-Value="model.Email"
+                                                       placeholder="john@exemple.com" />
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold mb-2">Adresse</label>
+                                                    <InputText class="form-control"
+                                                               @bind-Value="model.Address"
+                                                               placeholder="123 Rue du Restaurant" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold mb-2">Téléphone</label>
+                                                    <InputText class="form-control"
+                                                               @bind-Value="model.Phone"
+                                                               placeholder="+33 1 23 45 67 89" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold mb-2">Mot de passe</label>
+                                                    <InputText type="password"
+                                                               class="form-control"
+                                                               @bind-Value="model.Password"
+                                                               placeholder="●●●●●●●●" />
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-4">
+                                                    <label class="form-label fw-semibold mb-2">Confirmer</label>
+                                                    <InputText type="password"
+                                                               class="form-control"
+                                                               @bind-Value="model.ConfirmPassword"
+                                                               placeholder="●●●●●●●●" />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        
+
+                                        <div class="form-check mb-4">
+                                            <input class="form-check-input" type="checkbox" id="terms" checked="@acceptTerms">
+                                            <label class="form-check-label" for="terms">
+                                                J'accepte les
+                                                <a href="#" class="text-decoration-none">conditions d'utilisation</a>
+                                                et la
+                                                <a href="#" class="text-decoration-none">politique de confidentialité</a>
+                                            </label>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(error))
+                                        {
+                                            <div class="alert alert-danger d-flex align-items-center rounded-3 mb-4" role="alert">
+                                                <i class="bi bi-exclamation-triangle-fill me-3"></i>
+                                                <div>@error</div>
+                                            </div>
+                                        }
+
+                                        <div class="d-grid">
+                                            <button class="btn btn-success btn-lg py-3 fw-bold shadow-sm"
+                                                    type="submit"
+                                                    disabled="@(isSubmitting || !acceptTerms)">
+                                                @if (isSubmitting)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm me-2"></span>
+                                                    <i>Création du compte...</i>
+                                                                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-person-plus-fill me-2"></i>
+                                                    <i>Créer mon compte RestoApp</i>
+                                                                                                }
+                                            </button>
+                                        </div>
+                                    </EditForm>
+
+                                    <div class="text-center mt-4">
+                                        <a href="/" class="text-decoration-none text-muted">
+                                            <i class="bi bi-arrow-left me-1"></i>
+                                            Retour à la page d'accueil
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <!-- Colonne droite - Informations -->
+                                <div class="col-lg-5 bg-light rounded-4 p-4 mt-4 mt-lg-0">
+                                    <div class="sticky-top" style="top: 20px;">
+                                        <h3 class="fw-bold mb-4 text-primary">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            Pourquoi nous choisir ?
+                                        </h3>
+
+                                        <div class="mb-4">
+                                            <div class="d-flex align-items-start mb-3">
+                                                <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                                                    <i class="bi bi-shield-check text-primary fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="fw-semibold mb-1">Sécurité maximale</h5>
+                                                    <p class="text-muted small mb-0">Vos données sont cryptées et protégées 24h/24</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex align-items-start mb-3">
+                                                <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                                                    <i class="bi bi-lightning-charge text-primary fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="fw-semibold mb-1">Interface intuitive</h5>
+                                                    <p class="text-muted small mb-0">Prenez en main le système en quelques minutes</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex align-items-start mb-3">
+                                                <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                                                    <i class="bi bi-graph-up text-primary fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="fw-semibold mb-1">Analyses détaillées</h5>
+                                                    <p class="text-muted small mb-0">Suivez vos performances avec des rapports clairs</p>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-flex align-items-start">
+                                                <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-3">
+                                                    <i class="bi bi-headset text-primary fs-5"></i>
+                                                </div>
+                                                <div>
+                                                    <h5 class="fw-semibold mb-1">Support premium</h5>
+                                                    <p class="text-muted small mb-0">Notre équipe vous accompagne 7j/7</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="bg-white rounded-3 p-4 border">
+                                            <h4 class="fw-semibold mb-3">Déjà utilisé par</h4>
+                                            <div class="row text-center">
+                                                <div class="col-4">
+                                                    <div class="fw-bold display-6 text-primary">500+</div>
+                                                    <div class="small text-muted">Restaurants</div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="fw-bold display-6 text-success">98%</div>
+                                                    <div class="small text-muted">Satisfaction</div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="fw-bold display-6 text-warning">24/7</div>
+                                                    <div class="small text-muted">Support</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="mt-4">
+                                            <p class="text-muted small mb-2">
+                                                <i class="bi bi-star-fill text-warning me-1"></i>
+                                                Noté 4.8/5 par nos utilisateurs
+                                            </p>
+                                            <p class="text-muted small mb-0">
+                                                <i class="bi bi-shield-check text-success me-1"></i>
+                                                Solution certifiée et sécurisée
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0 text-secondary">
+                        <i class="bi bi-cup-hot-fill me-2"></i>
+                        © @DateTime.Now.Year RestoApp. Tous droits réservés.
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="text-secondary text-decoration-none me-3">Conditions d'utilisation</a>
+                    <a href="#" class="text-secondary text-decoration-none">Politique de confidentialité</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary: #4361ee;
+        --primary-dark: #3a0ca3;
+        --secondary: #f72585;
+        --success: #06d6a0;
+        --light: #f8f9fa;
+        --dark: #212529;
+    }
+
+    body {
+        font-family: 'Segoe UI', system-ui, sans-serif;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .container-fluid {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .bg-primary {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+    }
+
+    .card {
+        border-radius: 20px;
+    }
+
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        font-size: 1rem;
+    }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
+        }
+
+    .form-select {
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+    }
+
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.15);
+        }
+
+    .btn-success {
+        background: linear-gradient(90deg, var(--success), #05c593);
+        border: none;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(6, 214, 160, 0.3);
+        }
+
+        .btn-success:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .btn-outline-light {
+        border-radius: 8px;
+        border-width: 2px;
+    }
+
+    .alert-danger {
+        border: none;
+        background-color: rgba(220, 53, 69, 0.08);
+        color: #dc3545;
+        border-radius: 10px;
+    }
+
+    .form-check-input:checked {
+        background-color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .form-check-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+    }
+
+    a.text-decoration-none {
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+        a.text-decoration-none:hover {
+            color: var(--primary-dark);
+            text-decoration: underline !important;
+        }
+
+    .shadow-sm {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .shadow-lg {
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .rounded-4 {
+        border-radius: 20px !important;
+    }
+
+    .bg-opacity-10 {
+        background-color: rgba(67, 97, 238, 0.1) !important;
+    }
+
+    .sticky-top {
+        position: sticky;
+        top: 20px;
+    }
+
+    .display-6 {
+        font-size: 2.5rem;
+        font-weight: 800;
+    }
+
+    /* Responsive */
+    @@media (max-width: 992px) {
+        .container-fluid {
+            height: auto;
+            min-height: 100vh;
+        }
+
+        .py-5 {
+            padding-top: 2rem !important;
+            padding-bottom: 2rem !important;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .px-5 {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+
+        .p-5 {
+            padding: 2rem !important;
+        }
+    }
+</style>
+
+@code {
+    private RegisterRequest model = new();
+    private bool isSubmitting;
+    private string error;
+    private bool acceptTerms = true;
+    private string selectedRestaurantType = "";
+
+    private async Task RegisterAsync()
+    {
+        error = string.Empty;
+        isSubmitting = true;
+
+        try
+        {
+            // Call the AuthService register method
+            var result = await AuthService.RegisterAsync(model);
+
+            if (!result.IsSuccess)
+            {
+                error = result.Error ?? "Une erreur est survenue lors de l'inscription.";
+                return;
+            }
+
+            // Registration successful → navigate to login
+            Navigation.NavigateTo("/login");
+        }
+        catch (Exception ex)
+        {
+            error = $"Une erreur inattendue est survenue: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+}

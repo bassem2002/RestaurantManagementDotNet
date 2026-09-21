@@ -1,0 +1,153 @@
+﻿@page "/admin/items/create"
+@attribute [Authorize(Roles = "Admin")]
+
+@using System.ComponentModel.DataAnnotations
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@layout AdminLayout
+
+
+<PageTitle>Créer un Item</PageTitle>
+
+<div class="container mt-4">
+    <h3>Créer un item</h3>
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <EditForm Model="item" OnValidSubmit="Save">
+        <DataAnnotationsValidator />
+
+        <div class="mb-3">
+            <label>Nom</label>
+            <InputText class="form-control" @bind-Value="item.Name" />
+            <ValidationMessage For="@(() => item.Name)" />
+        </div>
+
+        <div class="mb-3">
+            <label>Prix</label>
+            <InputNumber class="form-control" @bind-Value="item.Price" />
+            <ValidationMessage For="@(() => item.Price)" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-medium">Catégorie</label>
+            <InputSelect class="form-select" @bind-Value="item.CategoryId">
+                <option value="">-- Sélectionner une catégorie --</option>
+                @foreach (var cat in categories)
+                {
+                    <option value="@cat.CategoryId">@cat.Name</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => item.CategoryId)" />
+            <div class="mb-3">
+                <label class="form-label fw-medium">Photo</label>
+
+                <InputFile OnChange="OnPhotoSelected"
+                           class="form-control" />
+
+                @if (!string.IsNullOrEmpty(photoName))
+                {
+                    <div class="form-text">
+                        Fichier sélectionné : @photoName
+                    </div>
+                }
+            </div>
+        </div>
+
+        <button class="btn btn-success me-2" type="submit">Créer</button>
+        <button class="btn btn-secondary" type="button" @onclick="Cancel">Annuler</button>
+    </EditForm>
+
+</div>
+
+@code {
+    private ItemDto item = new();
+    private string errorMessage = string.Empty;
+    private List<Category> categories = new();
+    private IBrowserFile? photoFile;
+    private string? photoName;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = await Http.GetFromJsonAsync<List<Category>>("api/category")
+                         ?? new List<Category>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    async Task Save()
+    {
+        try
+        {
+            var content = new MultipartFormDataContent();
+
+            content.Add(new StringContent(item.Name), "Name");
+            content.Add(new StringContent(item.Price!.Value.ToString()), "Price");
+            content.Add(new StringContent(item.CategoryId!.Value.ToString()), "CategoryId");
+
+            if (photoFile != null)
+            {
+                var stream = photoFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+
+                content.Add(
+                    new StreamContent(stream),
+                    "Photo",
+                    photoFile.Name
+                );
+            }
+
+            var response = await Http.PostAsync("api/item", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+                return;
+            }
+
+            Navigation.NavigateTo("/admin/items");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+
+    void Cancel()
+    {
+        Navigation.NavigateTo("/admin/items");
+    }
+    void OnPhotoSelected(InputFileChangeEventArgs e)
+    {
+        photoFile = e.File;
+        photoName = e.File.Name;
+    }
+
+
+    public class ItemDto
+    {
+        [Required(ErrorMessage = "Le nom est requis")]
+        public string Name { get; set; }
+
+        [Required(ErrorMessage = "Le prix est requis")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Le prix doit être supérieur à 0")]
+        public decimal? Price { get; set; }
+
+        [Required(ErrorMessage = "La catégorie est requise")]
+        public int? CategoryId { get; set; }
+    }
+
+    public class Category
+    {
+        public int CategoryId { get; set; }
+        public string Name { get; set; }
+    }
+}

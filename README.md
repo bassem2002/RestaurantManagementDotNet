@@ -465,6 +465,38 @@ This project demonstrates practical use of:
 
 ---
 
+## 🧪 Testing Status
+
+The solution does not currently include a dedicated unit-test or integration-test project. Files whose migration names contain `test` are Entity Framework migrations, not automated tests.
+
+The current repository can be validated at build level with:
+
+```bash
+dotnet restore
+dotnet build ProjetResto.sln
+```
+
+The complete solution—including `Backend`, `Front`, and `Models`—was verified to build with zero warnings and zero errors. API behavior can also be explored manually through Swagger in development mode.
+
+Recommended automated coverage:
+
+- Repository tests using an isolated test database
+- Controller integration tests with `WebApplicationFactory`
+- Authentication and authorization tests for Admin and Client roles
+- Cart, checkout, order-status, and payment workflow tests
+- Blazor component tests for protected routes and critical forms
+
+## ⚠️ Current Limitations
+
+- Automated unit, integration, and UI tests have not yet been added.
+- The Blazor client API base URL is hard-coded for local development.
+- The public repository does not yet provide real screenshots or a hosted demo.
+- Uploaded product images are stored on the local filesystem rather than object storage.
+- Local database and JWT configuration still require environment-specific setup before deployment.
+- Error handling and validation are implemented per endpoint rather than through a fully centralized application pipeline.
+
+---
+
 ## 📷 Application Preview
 
 Screenshots of the application interface will be added here.

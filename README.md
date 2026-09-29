@@ -91,6 +91,36 @@ SQL Server
 
 This structure separates HTTP/API concerns from database-access logic and makes the application easier to maintain and extend.
 
+### End-to-End Application Flow
+
+```text
+┌──────────────────────────────────────────────┐
+│ Blazor WebAssembly Frontend                  │
+│ Admin UI · Client UI · JWT state · Services  │
+└──────────────────────┬───────────────────────┘
+                       │ HTTPS / JSON REST API
+                       │ Authorization: Bearer <JWT>
+                       ▼
+┌──────────────────────────────────────────────┐
+│ ASP.NET Core Backend                         │
+│ Controllers · DTOs · Identity · Authorization│
+└──────────────────────┬───────────────────────┘
+                       │ Repository interfaces
+                       ▼
+┌──────────────────────────────────────────────┐
+│ Repository Implementations                   │
+│ Business-oriented data access                │
+└──────────────────────┬───────────────────────┘
+                       │ Entity Framework Core
+                       ▼
+┌──────────────────────────────────────────────┐
+│ SQL Server / LocalDB                         │
+│ Users · Roles · Items · Carts · Orders       │
+└──────────────────────────────────────────────┘
+```
+
+The Blazor client sends JSON requests to the ASP.NET Core API. Authentication tokens are stored on the client and attached to protected requests. Controllers validate and map incoming data through DTOs, repository implementations use `AppDbContext`, and Entity Framework Core persists the domain entities in SQL Server.
+
 ### Main Backend Layers
 
 ```text
@@ -120,6 +150,54 @@ Backend/
 │
 └── appsettings.json
     └── Application configuration
+```
+
+## 📂 Complete Repository Structure
+
+```text
+RestaurantManagementDotNet/
+├── Backend/                         # ASP.NET Core REST API
+│   ├── Controllers/                 # Account, catalog, cart, order and payment APIs
+│   ├── Data/
+│   │   └── AppDbContext.cs          # EF Core and Identity database context
+│   ├── DTOs/                        # API request and response contracts
+│   ├── Migrations/                  # SQL Server schema history
+│   ├── Repository/
+│   │   ├── Interfaces/              # Data-access abstractions
+│   │   └── Implementations/         # EF Core repository implementations
+│   ├── Properties/                  # Development launch profiles
+│   ├── wwwroot/uploads/items/       # Uploaded product images
+│   ├── Program.cs                   # Services, security and middleware
+│   ├── appsettings.json             # Local application configuration
+│   └── Backend.csproj
+├── Front/                           # Blazor WebAssembly client
+│   ├── Layout/                      # Admin, client and navigation layouts
+│   ├── Models/                      # Frontend request and view models
+│   ├── Pages/
+│   │   ├── Admin/                   # Dashboard, clients, categories, items and orders
+│   │   ├── Client/                  # Catalog, cart, checkout, orders and profile
+│   │   ├── Login.razor
+│   │   └── Register.razor
+│   ├── Services/                    # API, token, authentication and UI services
+│   ├── wwwroot/                     # CSS, icons, PWA files and static assets
+│   ├── App.razor                    # Routing and authorization shell
+│   ├── Program.cs                   # Client dependency injection and API base URL
+│   └── Front.csproj
+├── Models/                          # Domain entities shared by API and client
+│   ├── ApplicationUser.cs
+│   ├── Cart.cs
+│   ├── CartItem.cs
+│   ├── Category.cs
+│   ├── Item.cs
+│   ├── Order.cs
+│   ├── OrderItem.cs
+│   ├── Payment.cs
+│   └── Models.csproj
+├── ProjetResto.sln                  # .NET solution containing all three projects
+├── MIGRATION_INSTRUCTIONS.md        # Database migration notes
+├── ROADMAP_DEVELOPPEMENT.md         # Development roadmap
+├── LICENSE
+└── README.md
 ```
 
 ---
@@ -311,6 +389,41 @@ dotnet run
 ```
 
 The Swagger interface will be available from the development URL displayed in the terminal.
+
+---
+
+## 🖥️ Frontend Status
+
+The repository includes an implemented **Blazor WebAssembly frontend targeting .NET 9**. It is not an empty scaffold or a future placeholder. The solution currently builds successfully with **zero warnings and zero errors**.
+
+Implemented frontend areas include:
+
+- Login, registration, logout and JWT-based authentication state
+- Separate Admin and Client layouts
+- Admin dashboard and order monitoring
+- Category and product creation, editing and listing
+- Client and shopping-cart inspection for administrators
+- Client catalog browsing and product display
+- Shopping cart and checkout workflow
+- Order confirmation, history and tracking
+- Client profile management
+- Local token storage, route authorization, notifications and toast messages
+- Progressive Web App assets and service workers
+
+The frontend communicates with the backend through typed services and `HttpClient`. Its development API base address is currently configured in `Front/Program.cs` as:
+
+```text
+https://localhost:7281/
+```
+
+To run it, keep the backend active and start the client in a second terminal:
+
+```bash
+cd Front
+dotnet run
+```
+
+The frontend is functional at source and build level, but the public README does not yet include real interface screenshots or a hosted demonstration. The API address is also hard-coded for local development and should be moved to environment-specific configuration before deployment.
 
 ---
 

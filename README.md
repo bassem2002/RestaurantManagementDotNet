@@ -1,5 +1,14 @@
 # 🍽️ RestaurantManagementDotNet
 
+<p align="center">
+  <img src="https://img.shields.io/badge/ASP.NET%20Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt="ASP.NET Core" />
+  <img src="https://img.shields.io/badge/SQL%20Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white" alt="SQL Server" />
+  <img src="https://img.shields.io/badge/JWT%20%7C%20RBAC-Security-0F766E?style=for-the-badge" alt="JWT RBAC" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-14B8A6?style=for-the-badge" alt="MIT License" /></a>
+</p>
+
+<p align="center"><a href="#features">Features</a> · <a href="#architecture">Architecture</a> · <a href="#️-getting-started">Getting started</a></p>
+
 Restaurant management application built with **ASP.NET Core**, **Entity Framework Core**, and **SQL Server**, featuring JWT authentication, ASP.NET Core Identity, product catalog management, user roles, and repository-based data access.
 
 ---
